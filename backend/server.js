@@ -30,6 +30,26 @@ const userSchema = new mongoose.Schema({
   },
 });
 
+const foodSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    unique: true,
+    required: true,
+    minlength: 2,
+  }, 
+  food_id: {
+    type: Number,
+  }, 
+  raing: {
+    type: Number,
+    
+  },
+  timestamp: {
+    type: Date,
+  }
+
+})
+
 userSchema.pre('save', async function(next) {
   const user = this;
 
@@ -132,25 +152,10 @@ app.get('/secret', async (req, res) => {
 
 
 // Secure endpoint, user needs to be logged in to access this.
-app.get('/users/:id/profile', authenticateUser);
-app.get('/users/:id/profile', async (req, res) => {
+app.get('/users/:id', authenticateUser);
+app.get('/users/:id', async (req, res) => {
   const user = await User.findOne({_id: req.params.id});
-  const publicProfileMessage = `This is a public profile message for ${user.name}`;
-  const privateProfileMessage = `This is a private profile messafe for ${user.name}`;
-
-  console.log(`Authenticated req.user._id: '${req.user._id.$oid}'`);
-  console.log(`Requested user._id : ${user._id}'`);
-  console.log(`Equal: ${req.user._id == user._id}`);
-
-  // Decide private or public message here
-  if (req.user._id.$oid == user._id.$oid) {
-    // Private
-    res.status(200).json({ profileMessage: privateProfileMessage });
-  } else {
-    // Public information or Forbidden (403) because the users don´t match
-    res.status(200).json({ profileMessage: publicProfileMessage });
-  }
-
+  res.json({name: user.name})
 });
 
 
