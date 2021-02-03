@@ -36,13 +36,13 @@ const foodSchema = new mongoose.Schema({
     unique: true,
     required: true,
     minlength: 2,
-  }, 
+  },
   food_id: {
     type: Number,
-  }, 
-  raing: {
+  },
+  rating: {
     type: Number,
-    
+
   },
   timestamp: {
     type: Date,
@@ -50,10 +50,10 @@ const foodSchema = new mongoose.Schema({
 
 })
 
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
   const user = this;
 
-  if(!user.isModified('password')){
+  if (!user.isModified('password')) {
     return next();
   }
 
@@ -68,6 +68,24 @@ userSchema.pre('save', async function(next) {
 
 const User = mongoose.model("User", userSchema)
 
+
+foodSchema.pre('save', async function (next) {
+  const food = this;
+
+  if (!food.isModified('password')) {
+    return next();
+  }
+
+  const salt = bcrypt.genSaltSync();
+  console.log(`PRE: password before hash: ${food.password}`)
+  food.password = bcrypt.hashSync(food.password, salt);
+  console.log(`PRE: password after hash: ${food.password}`)
+
+  //continue with the save
+  next();
+});
+
+const Food = mongoose.model("Food", foodSchema)
 // const User = mongoose.model("User", {
 //   name: {
 //     type: String,
@@ -94,18 +112,18 @@ app.use(cors());
 app.use(bodyParser.json());
 
 const authenticateUser = async (req, res, next) => {
-  try{
+  try {
     const accessToken = req.header('Authorization');
-    const user = await User.findOne({accessToken});
-    if(!user){
+    const user = await User.findOne({ accessToken });
+    if (!user) {
       throw "User not found"
     }
     req.user = user;
     next();
-  }catch (err){
+  } catch (err) {
     const errorMessage = "Please try logging in again";
     console.log(errorMessage);
-    res.status(401).json({error: errorMessage});
+    res.status(401).json({ error: errorMessage });
   }
 
 };
@@ -116,8 +134,8 @@ const authenticateUser = async (req, res, next) => {
 app.post("/users", async (req, res) => {
   try {
     const { name, password } = req.body;
-    const user = await new User({ 
-      name, 
+    const user = await new User({
+      name,
       password,
     }).save();
     res.status(200).json({ userId: user._id, accessToken: user.accessToken });
@@ -129,16 +147,16 @@ app.post("/users", async (req, res) => {
 
 // Login
 app.post("/sessions", async (req, res) => {
-  try{
-    const {name, password } = req.body;
-    const user = await User.findOne({name});
-    if(user && bcrypt.compareSync(password, user.password)){
-        res.status(200).json({ userId: user._id, accessToken: user.accessToken })
-    }else{
+  try {
+    const { name, password } = req.body;
+    const user = await User.findOne({ name });
+    if (user && bcrypt.compareSync(password, user.password)) {
+      res.status(200).json({ userId: user._id, accessToken: user.accessToken })
+    } else {
       throw "User not found";
     }
-  }catch(err){
-    res.status(404).json({error:err})
+  } catch (err) {
+    res.status(404).json({ error: err })
   }
   res.status(501).send();
 });
@@ -152,10 +170,20 @@ app.get('/secret', async (req, res) => {
 
 
 // Secure endpoint, user needs to be logged in to access this.
-app.get('/users/:id', authenticateUser);
-app.get('/users/:id', async (req, res) => {
-  const user = await User.findOne({_id: req.params.id});
-  res.json({name: user.name})
+app.get('/profile', authenticateUser);
+app.get('/profile', async (req, res) => {
+  res.json({ name: req.user.name });
+});
+
+app.get('/profile', authenticateUser);
+app.get('/profile', async (req, res) => {
+  res.json({ name: req.user.name });
+});
+
+app.post("/food", async (req, res) => {
+    const { name, rating } = req.body;
+    const food = await new Food({ name, rating})
+    res.json({ name: req.food.name });
 });
 
 
