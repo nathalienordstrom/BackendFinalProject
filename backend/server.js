@@ -175,10 +175,7 @@ app.get('/profile', async (req, res) => {
   res.json({ name: req.user.name });
 });
 
-app.get('/profile', authenticateUser);
-app.get('/profile', async (req, res) => {
-  res.json({ name: req.user.name });
-});
+
 
 app.post("/food", async (req, res) => {
     const { name, rating } = req.body;
