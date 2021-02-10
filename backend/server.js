@@ -46,8 +46,10 @@ const foodSchema = new mongoose.Schema({
   },
   timestamp: {
     type: Date,
+  },
+  userId: {
+    type: String,
   }
-
 })
 
 userSchema.pre('save', async function (next) {
@@ -177,10 +179,27 @@ app.get('/profile', async (req, res) => {
 
 
 
+app.post('/food', authenticateUser);¢
 app.post("/food", async (req, res) => {
+  try {
     const { name, rating } = req.body;
-    const food = await new Food({ name, rating})
-    res.json({ name: req.food.name });
+    const food = await new Food({
+      name,
+      userId: req.user._id,
+      rating,
+    }).save();
+    res.status(200).json({ foodId: food._id });
+  } catch (err) {
+    res.status(400).json({ message: "Could not create food", errors: err });
+  
+  }
+});
+
+
+
+app.get('/foods', authenticateUser);
+app.get('/foods', async (req, res) => {
+  res.json({ name: req.user.name });
 });
 
 
