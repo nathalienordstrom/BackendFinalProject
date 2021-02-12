@@ -179,8 +179,8 @@ app.get('/profile', async (req, res) => {
 
 
 
-app.post('/food', authenticateUser);¢
-app.post("/food", async (req, res) => {
+app.post('/food', authenticateUser);
+app.post('/food', async (req, res) => {
   try {
     const { name, rating } = req.body;
     const food = await new Food({
@@ -199,7 +199,8 @@ app.post("/food", async (req, res) => {
 
 app.get('/foods', authenticateUser);
 app.get('/foods', async (req, res) => {
-  res.json({ name: req.user.name });
+  const foods = await Food.find({userId: req.user._id})
+  res.json({foods:foods})
 });
 
 
